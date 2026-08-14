@@ -2,35 +2,99 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Processando Localização...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compartilhar Localização</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        .btn:hover {
+            background-color: #128C7E;
+        }
+        #status {
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
 
-    <p>Aguarde, obtendo sua localização e abrindo o WhatsApp...</p>
+<div class="container">
+    <h2>Enviar Localização</h2>
+    <p id="status">Clique no botão abaixo para capturar sua posição e abrir o WhatsApp.</p>
+    <button onclick="iniciarEnvio()" id="btnAcao" class="btn">Compartilhar Localização</button>
+</div>
 
-    <script>
-        // Executa a função assim que a página termina de carregar
-        window.onload = function() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(posicao) {
-                    let lat = posicao.coords.latitude;
-                    let lon = posicao.coords.longitude;
-                    
-                    let numero = "5521967813618";
-                    let texto = encodeURIComponent(`Minha localização atual: https://google.com{lat},${lon}`);
-                    
-                    let urlWhatsApp = `https://whatsapp.com{numero}&text=${texto}`;
-                    
-                    // Redireciona a própria aba para o WhatsApp de forma direta
-                    window.location.href = urlWhatsApp;
-                }, function(erro) {
-                    alert("Erro ao obter a localização: " + erro.message);
-                });
-            } else {
-                alert("Seu navegador não suporta geolocalização.");
-            }
-        };
-    </script>
+<script>
+    function iniciarEnvio() {
+        let status = document.getElementById("status");
+        let btn = document.getElementById("btnAcao");
+        
+        status.innerText = "Buscando localização... Por favor, permita o acesso na tela.";
+        btn.disabled = true;
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(posicao) {
+                let lat = posicao.coords.latitude;
+                let lon = posicao.coords.longitude;
+                
+                let numero = "5521967813618";
+                let texto = encodeURIComponent(`Minha localização atual: https://google.com{lat},${lon}`);
+                let urlWhatsApp = `https://whatsapp.com{numero}&text=${texto}`;
+                
+                status.innerText = "Localização encontrada! Abrindo WhatsApp...";
+                
+                // Redireciona de forma segura em resposta ao clique
+                window.location.href = urlWhatsApp;
+                
+                // Restaura o botão após alguns segundos
+                setTimeout(() => { btn.disabled = false; }, 3000);
+                
+            }, function(erro) {
+                btn.disabled = false;
+                if(erro.code === erro.PERMISSION_DENIED) {
+                    status.innerText = "Acesso negado. Ative a permissão de localização no seu navegador.";
+                    alert("Acesso negado. Por favor, clique no ícone de cadeado ao lado do link no topo da tela e mude a Localização para 'Permitir'.");
+                } else {
+                    status.innerText = "Erro ao obter localização: " + erro.message;
+                }
+            }, {
+                enableHighAccuracy: true, // Garante maior precisão usando o GPS do celular
+                timeout: 10000
+            });
+        } else {
+            status.innerText = "Seu navegador não suporta geolocalização.";
+            btn.disabled = false;
+        }
+    }
+</script>
 
 </body>
 </html>
